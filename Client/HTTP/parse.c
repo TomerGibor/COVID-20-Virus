@@ -163,20 +163,6 @@ HTTP_RESPONSE parse_response(char* response, unsigned int response_length) {
 	return http_response;
 }
 
-HTTP_HEADER build_host_header(const char* IP, const unsigned short PORT) {
-	HTTP_HEADER host_header = { "Host", 0 };
-	char* str_port = (char*) calloc(log10(PORT) + 1, sizeof(char));
-	int length = strnlen(IP, MAX_IP_LEN) + sizeof(":") + log10(PORT);
-	char* host = (char*)calloc(length, sizeof(char));
-	itoa(PORT, str_port, 10);
-	strncpy(host, IP, strnlen(IP, MAX_IP_LEN));
-	strncat(host, ":", sizeof(":") - 1);
-	strncat(host, str_port, log10(PORT) + 1);
-	
-	strncpy(host_header.value, host, length);
-	return host_header;
-}
-
 HTTP_HEADER build_header(char* name, char* value) {
 	HTTP_HEADER http_header = { 0 };
 	strncpy(http_header.name, name, strnlen(name, MAX_STR_LEN));

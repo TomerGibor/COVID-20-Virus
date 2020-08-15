@@ -1,2 +1,5 @@
 fastapi
 uvicorn
+python-multipart
+aiofiles
+pydrive

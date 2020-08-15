@@ -21,7 +21,7 @@ SPECIAL_KEY specials[] = {
 	{VK_LMENU, FALSE, " ALT "},
 	{VK_RMENU, FALSE, " ALT "},
 	{VK_CAPITAL, FALSE, ""},
-	{VK_SPACE, FALSE, " SPACE "},
+	{VK_SPACE, FALSE, " "},
 	{VK_LEFT, FALSE, " LEFT "},
 	{VK_RIGHT, FALSE, " RIGHT "},
 	{VK_DELETE, FALSE, " DEL "},

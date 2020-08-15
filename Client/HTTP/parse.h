@@ -14,8 +14,6 @@ HTTP_RESPONSE parse_response(char* response, unsigned int response_length);
 
 char* next_token(char* text, const char* delimiter, unsigned int delimiter_length);
 
-HTTP_HEADER build_host_header(const char* IP, const unsigned short PORT);
-
 HTTP_HEADER build_header(char* name, char* value);
 
 char* get_datetime();

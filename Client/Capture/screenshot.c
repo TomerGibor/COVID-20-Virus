@@ -84,13 +84,14 @@ char* take_screen_capture(){
 
     DeleteDC(hdcSource);
     DeleteDC(hdcMemory);
-
+    
     return hbitmap_to_bitmap_buffer(hBitmap);
 }
 
 int get_screen_capture_size() {
     return get_headers_size() + get_image_size(WIDTH, HEIGHT, BITS_PER_PIXEL);
 }
+
 
 void initialize_dimensions() {
     RECT desktop = { 0 };

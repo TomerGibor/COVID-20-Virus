@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>COVID-20 Control Panel</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+    <body>
+        <h1>Manage Clients</h1>
+        <form method="post" action="/add_command">
+            <label for="mac_address">Choose client:</label>
+            <br>
+            <select name="mac_address" id="mac_address" multiple>
+            </select>
+            <br>
+            <label for="commands">Enter commands (separated by comma):</label>
+            <br>
+            <input type="text" id="commands" name="commands">
+            <br><br>
+            <input type="submit" value="Submit">
+        </form>
+
+    <script type="application/json" src="db.json"></script>
+    <script>
+        $.getJSON('db.json',function(data) {
+            var arrayOfKeys = Object.keys(data);
+            console.log(arrayOfKeys);
+            for (var i = 0; i < arrayOfKeys.length; i++) {
+                $("#mac_address").append("<option value=" + arrayOfKeys[i] + " >" + arrayOfKeys[i] + "</option>");
+            }
+        })
+    </script>
+    </body>
+</html>
