@@ -1,6 +1,6 @@
 #pragma once
 #include <Windows.h>
-#define MAX_REPR_LEN 8
+#include "../constants.h"
 
 typedef struct _SPECIAL_KEY {
 	int key_code;

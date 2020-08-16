@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Commands</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+    <body>
+        <h1>Add Commands</h1>
+        <form method="post" action="/add_command">
+            <label for="mac_address">Choose client:</label>
+            <br>
+            <select name="mac_address" id="mac_address">
+            </select>
+            <br>
+            <label for="commands">Enter commands (separated by comma):</label>
+            <br>
+            <input type="text" id="commands" name="commands">
+            <br><br>
+            <input type="submit" value="Submit">
+        </form>
+
+    <script src="db.json" type="application/json"></script>
+    <script>
+        $.getJSON('db.json',function(data) {
+            for (let value of Object.keys(data)) {
+                $("#mac_address").append(`<option value=${value}>${value}</option>`);
+            }
+        })
+    </script>
+    </body>
+</html>

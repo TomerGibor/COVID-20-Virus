@@ -1,4 +1,5 @@
 #include <Windows.h>
+#define BITS_PER_PIXEL 24
 
 char* hbitmap_to_bitmap_buffer(HBITMAP h_bitmap);
 

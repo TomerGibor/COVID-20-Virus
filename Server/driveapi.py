@@ -14,7 +14,7 @@ def create_folder(title: str) -> None:
 def upload_file_from_file(title: str, src_filename: str, mime_type: str, parent: str) -> None:
     folders = drive.ListFile(
         {
-            'q': "title='" + parent + "' and mimeType='application/vnd.google-apps.folder' and trashed=false"}
+            'q': f"title='{parent}' and mimeType='application/vnd.google-apps.folder' and trashed=false"}
     ).GetList()
     for folder in folders:
         if folder['title'] == parent:

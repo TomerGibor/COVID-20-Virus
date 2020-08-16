@@ -4,8 +4,6 @@
 #include "capture_utils.h"
 #pragma comment(lib, "Gdi32.lib")
 
-#define BITS_PER_PIXEL 24
-
 unsigned int WIDTH = 1920; // default width
 unsigned int HEIGHT = 1080; // default height
 

@@ -22,4 +22,6 @@ Commands can be added to a client by surfing to / (on server), in which a form w
 
 Users are encouraged to upload the server to a hosting website (such as heroku). All the file required by heroku are already supplied in this repository (such as requirements.txt, Procfile and runtime.txt).
 
+In file security.py on the server, insert your desired username and password (hashed in SHA-256) from which you would have access to the clients' data and would be able to add commands to clients by surfing to your server website.
+
 Please be responsible with using this code. Tomer Gibor is not liable by any means to any damaged caused by anyone who used this code.

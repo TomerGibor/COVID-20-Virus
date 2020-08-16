@@ -111,6 +111,7 @@
   <ItemGroup>
     <ClCompile Include="Capture\screenshot.c" />
     <ClCompile Include="Capture\capture_utils.c" />
+    <ClCompile Include="constants.h" />
     <ClCompile Include="http\http.c" />
     <ClCompile Include="http\parse.c" />
     <ClCompile Include="keylogger\logger.c" />
