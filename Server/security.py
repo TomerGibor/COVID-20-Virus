@@ -4,8 +4,10 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 security = HTTPBasic()
-USERNAME = '1c74dc99fb9d3ad9c7daedb4f7f1f3e54c07f31d49e71acb9de681df1eff9455'
-PASSWD = 'caa11353428317ddf54eccd2f209f1e71cb8b658e1026c2370aa6d5da4cc268f'
+# admin (replace with your own username)
+USERNAME = '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918'
+# 123456 (replace with your own password)
+PASSWD = '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92'
 
 
 def get_current_username(credentials: HTTPBasicCredentials = Depends(security)) -> str:
