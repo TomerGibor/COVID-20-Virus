@@ -5,7 +5,7 @@ A shortcut to the executable file is intended to be install on a target computer
 
 The server and client communicate via HTTP requests and responses.
 ## Commands
-##### Possible commands are:
+#### Possible commands are:
 * `start_keylogging` - starts to log keyboard and saves it to a file locally.
 * `send_keylogging` - sends the logged data to the server which saves it to Google Drive.
 * `stop_keylogging` - stops to log keyboard.
