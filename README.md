@@ -1,6 +1,6 @@
 A virus for Windows written in C with a server that manages the clients.
 
-A shortcut to the executable file is intended to be install on a target computer in folder `"C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp"` for it to be ran automatically on startup (inside the folder to which the shortcut leads, the escapi.dll file should be places as well). The malware includes options to take screenshots and webcam shots (if a webcam is present and not in use), log keyboard, and execute commands in cmd. The clients are controlled by a server that serves them commands upon request (by default - one minute delay between requests) and saves the pictures and logfiles on Google Drive.
+A shortcut to the executable file is intended to be install on a target computer in folder `"C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp"` for it to be ran automatically on startup (inside the folder to which the shortcut leads, the escapi.dll file should be placed as well). The malware includes options to take screenshots and webcam shots (if a webcam is present and not in use), log keyboard, and execute commands in cmd. The clients are controlled by a server that serves them commands upon request (by default - one minute delay between requests) and saves the pictures and logfiles on Google Drive.
 
 The server and client communicate via HTTP requests and responses.
 
