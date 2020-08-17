@@ -10,7 +10,7 @@ USERNAME = '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918'
 PASSWD = '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92'
 
 
-def get_current_username(credentials: HTTPBasicCredentials = Depends(security)) -> str:
+def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)) -> HTTPBasicCredentials:
     hashed_username = sha256_hash(credentials.username)
     hashed_passwd = sha256_hash(credentials.password)
     correct_username = secrets.compare_digest(hashed_username, USERNAME)
@@ -21,7 +21,7 @@ def get_current_username(credentials: HTTPBasicCredentials = Depends(security)) 
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Basic"},
         )
-    return credentials.username
+    return credentials
 
 
 def sha256_hash(string: str) -> str:

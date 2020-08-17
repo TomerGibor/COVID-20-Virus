@@ -8,6 +8,6 @@ def load_db() -> dict:
         return json.load(file)
 
 
-def write_db(db: dict) -> None:
+def update_db(db: dict) -> None:
     with open(DB_NAME, 'w') as file:
         json.dump(db, file)
