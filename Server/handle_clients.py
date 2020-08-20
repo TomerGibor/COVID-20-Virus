@@ -4,7 +4,6 @@ from driveapi import upload_file_from_existing_file, create_folder
 from typing import List, Dict
 from consts import HTTPHeaders, DBIdentifiers
 
-
 NO_COMMANDS = ['no_commands']
 TEMP_FILE = 'temp'
 db_handler = DBHandler()
