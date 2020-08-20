@@ -7,33 +7,34 @@ from consts import Client
 class Singleton:
     """ An implementation of singleton using decorator. """
 
-    def __init__(self, cls):
-        self.cls = cls
-        self.instance = None
+    def __init__(self, class_):
+        self._class = class_
+        self._instance = None
 
     def __call__(self, *args, **kwargs):
-        if self.instance is None:
-            self.instance = self.cls(*args, **kwargs)
-        return self.instance
+        if self._instance is None:
+            self._instance = self._class(*args, **kwargs)
+        return self._instance
 
 
 class ClientEncoder(json.JSONEncoder):
     """ Custom class to encode client in order to dump to json file. """
 
     def default(self, client: Client) -> Dict[str, Union[int, str, List[str]]]:
+        """ Called in case json can't serialize object. """
         return asdict(client)
 
 
 class ClientDecoder(json.JSONDecoder):
     def __init__(self):
-        json.JSONDecoder.__init__(self,
-                                  object_hook=self.dict_to_client)
+        super().__init__(object_hook=self.dict_to_client)
 
     @staticmethod
-    def dict_to_client(dct: Any) -> Union[Client, Any]:
-        if isinstance(dct, dict) and 'commands' in dct:
-            return Client(**dct)
-        return dct
+    def dict_to_client(obj: Any) -> Union[Client, Any]:
+        """ Called for every json object. """
+        if isinstance(obj, dict) and 'commands' in obj:
+            return Client(**obj)
+        return obj
 
 
 @Singleton
@@ -44,6 +45,9 @@ class DBHandler:
     MAX_COMMANDS = 10
 
     def __init__(self):
+        self._load_db()
+
+    def _load_db(self) -> None:
         with open(self.DB_NAME, 'r') as file:
             self._db = json.load(file, cls=ClientDecoder)
 

