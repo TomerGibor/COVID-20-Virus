@@ -22,7 +22,7 @@ In both cases, one would have to fill in the `client_id` and `client_secret` in 
 
 Commands can be added to a client using the web interface (which is password-protected), in which a form will be presented containing all mac-addresses (clients are identified by their mac-address) and a box with space to enter one or more on the commands mentioned above. One can also view the details of the clients with the (not very well designed) view clients page.
 
-Users are encouraged to upload the server to a hosting website (such as [heroku](https://heroku.com)). All the file required by heroku are already supplied in this repository (such as `requirements.txt`, `Procfile` and `runtime.txt`).
+Users are encouraged to upload the server to a hosting website (such as [heroku](https://heroku.com)). All the file required by heroku are already supplied in this repository (such as `requirements.txt`, `Procfile` and `runtime.txt`). After you received your server URL, change the `HOST` in file `constants.h` on the client.
 
 In file `security.py` on the server, insert your desired username and password (hashed in SHA-256) from which you would have access to the clients' data and would be able to add commands to clients by surfing to your server website.
 
