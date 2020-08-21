@@ -14,17 +14,17 @@ def handle_first_command(request: Request) -> Dict[str, List[str]]:
     datetime = request.headers[HTTPHeaders.DATETIME]
     if db_handler.db.get(mac) is None:
         # new client
-        create_new_client(mac, datetime)
+        _create_new_client(mac, datetime)
         return {'commands': NO_COMMANDS}
     else:
         # existing client
-        return get_commands(mac, datetime)
+        return _get_commands(mac, datetime)
 
 
 def handle_command_request(request: Request) -> Dict[str, List[str]]:
     mac = request.headers[HTTPHeaders.MAC]
     datetime = request.headers[HTTPHeaders.DATETIME]
-    return get_commands(mac, datetime)
+    return _get_commands(mac, datetime)
 
 
 async def upload_file(request: Request, filename: str, db_identifier: DBIdentifiers,
@@ -41,14 +41,14 @@ async def upload_file(request: Request, filename: str, db_identifier: DBIdentifi
                                    parent=mac)
 
 
-def get_commands(mac: str, datetime: str) -> Dict[str, List[str]]:
+def _get_commands(mac: str, datetime: str) -> Dict[str, List[str]]:
     db_handler.db[mac].last_datetime = datetime
     db_handler.update_db()
     commands = db_handler.retrieve_commands_from_db(mac) or NO_COMMANDS
     return {'commands': commands}
 
 
-def create_new_client(mac: str, datetime: str) -> None:
+def _create_new_client(mac: str, datetime: str) -> None:
     db_handler.initialize_new_client(mac, datetime)
     create_folder(mac)  # create new Google Drive folder for the new client
 
