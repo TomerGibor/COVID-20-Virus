@@ -1,14 +1,18 @@
-import uvicorn
+__author__ = 'Tomer Gibor'
+
 import os
+from typing import Dict, List, Union
+from http import HTTPStatus
+
+import uvicorn
 from fastapi import FastAPI, Request, Form, Depends, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.security import HTTPBasicCredentials
-from typing import Dict, List, Union
+
 from security import verify_credentials
 from db_utils import DBHandler
 from handle_clients import handle_command_request, handle_first_command, upload_file
 from consts import DBIdentifiers, HTTPHeaders
-from http import HTTPStatus
 
 app = FastAPI()
 db_handler = DBHandler()
