@@ -46,8 +46,8 @@ async def db_json(credentials: HTTPBasicCredentials = Depends(verify_credentials
 
 @app.post('/add_commands')
 async def add_commands(credentials: HTTPBasicCredentials = Depends(verify_credentials),
-                       mac_address: str = Form(default=None),
-                       commands: str = Form(default="")) -> HTMLResponse:
+                       mac_address: str = Form(...),
+                       commands: str = Form(default='')) -> HTMLResponse:
     parsed_commands = [cmd.strip() for cmd
                        in commands.split(',')
                        if not cmd.isspace()]
