@@ -1,21 +1,22 @@
 import json
 from typing import Dict, List, Union, Any
 from dataclasses import asdict
+from functools import wraps
 
 from consts import Client
 
 
-class Singleton:
+def singleton(cls):
     """ An implementation of singleton using decorator. """
+    instances = {}
 
-    def __init__(self, class_):
-        self._class = class_
-        self._instance = None
+    @wraps(cls)
+    def wrapper(*args, **kwargs):
+        if cls not in instances:
+            instances[cls] = cls(*args, **kwargs)
+        return instances[cls]
 
-    def __call__(self, *args, **kwargs):
-        if self._instance is None:
-            self._instance = self._class(*args, **kwargs)
-        return self._instance
+    return wrapper
 
 
 class ClientEncoder(json.JSONEncoder):
@@ -38,7 +39,7 @@ class ClientDecoder(json.JSONDecoder):
         return obj
 
 
-@Singleton
+@singleton
 class DBHandler:
     """ Class to handle DB related tasks. """
 
