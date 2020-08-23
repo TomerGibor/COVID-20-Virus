@@ -11,7 +11,11 @@ USERNAME = '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918'
 PASSWD = '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92'
 
 
-def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)) -> HTTPBasicCredentials:
+def verify_credentials(credentials: HTTPBasicCredentials
+                       = Depends(security)) -> HTTPBasicCredentials:
+    """ Verifies the username and password and prompts another try if
+     they are not correct.
+    """
     hashed_username = sha256_hash(credentials.username)
     hashed_passwd = sha256_hash(credentials.password)
     # secrets.compare_digest used to prevent timing attack
@@ -20,8 +24,8 @@ def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)) ->
     if not (correct_username and correct_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Basic"},
+            detail='Incorrect username or password',
+            headers={'WWW-Authenticate': 'Basic'},
         )
     return credentials
 

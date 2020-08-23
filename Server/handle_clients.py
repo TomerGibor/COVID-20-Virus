@@ -12,6 +12,15 @@ db_handler = DBHandler()
 
 
 def handle_first_command(request: Request) -> Dict[str, List[str]]:
+    """
+    If the client is new, initializes it in DB and creates Google Drive
+     folder. Otherwise retrieves the command for the client from the DB.
+    Args:
+        request (Request): The request received from the client.
+
+    Returns:
+        Dict[str, List[str]]: the commands addressed to that client.
+    """
     mac = request.headers[HTTPHeaders.MAC]
     datetime = request.headers[HTTPHeaders.DATETIME]
     if db_handler.db.get(mac) is None:
@@ -20,17 +29,38 @@ def handle_first_command(request: Request) -> Dict[str, List[str]]:
         return {'commands': NO_COMMANDS}
     else:
         # existing client
-        return _get_commands(mac, datetime)
+        update_datetime(request)
+        return _get_commands(mac)
 
 
 def handle_command_request(request: Request) -> Dict[str, List[str]]:
+    """
+    Retrieves the commands for the client from the DB.
+    Args:
+        request (Request): The request received from the client.
+
+    Returns:
+         Dict[str, List[str]]: the commands addressed to the client.
+    """
     mac = request.headers[HTTPHeaders.MAC]
-    datetime = request.headers[HTTPHeaders.DATETIME]
-    return _get_commands(mac, datetime)
+    return _get_commands(mac)
 
 
 async def upload_file(request: Request, filename: str, db_identifier: DBIdentifiers,
                       file_type: str, remove_nulls: bool = False) -> None:
+    """
+    Uploads the file content of the request to the (already created)
+      Google Drive folder.
+    Args:
+        request (Request): The request received from the client.
+        filename (str): The name of the file that will be uploaded.
+        db_identifier (DBIdentifiers): The identifier in the DB which
+          counts how many files of that name have been uploaded, so that
+          the new file will be numbered.
+        file_type (str): The file ending. NOT the MIME type.
+        remove_nulls (bool): If set to True, removes all the null
+         characters in the file. Defaults to False.
+    """
     if db_identifier not in DBIdentifiers.__members__.values():
         return  # illegal identifier
     mac = request.headers[HTTPHeaders.MAC]
@@ -40,19 +70,29 @@ async def upload_file(request: Request, filename: str, db_identifier: DBIdentifi
     upload_file_from_existing_file(title=title,
                                    src_filename=TEMP_FILE,
                                    mime_type=request.headers[HTTPHeaders.CONTENT_TYPE],
-                                   parent=mac)
+                                   parent_folder_title=mac)
 
 
-def _get_commands(mac: str, datetime: str) -> Dict[str, List[str]]:
-    db_handler.db[mac].last_datetime = datetime
+def update_datetime(request: Request) -> None:
+    """
+    Updates the DB datetime for some client.
+    Args:
+        request: The request received from the client.
+    """
+    mac_address = request.headers[HTTPHeaders.MAC]
+    datetime = request.headers[HTTPHeaders.DATETIME]
+    db_handler.db[mac_address].last_datetime = datetime
     db_handler.update_db()
-    commands = db_handler.retrieve_commands_from_db(mac) or NO_COMMANDS
+
+
+def _get_commands(mac_address: str) -> Dict[str, List[str]]:
+    commands = db_handler.retrieve_commands_from_db(mac_address) or NO_COMMANDS
     return {'commands': commands}
 
 
 def _create_new_client(mac: str, datetime: str) -> None:
     db_handler.initialize_new_client(mac, datetime)
-    create_folder(mac)  # create new Google Drive folder for the new client
+    create_folder(mac)  # Create new Google Drive folder for the new client
 
 
 async def _write_to_temp_file(request: Request, remove_nulls: bool) -> None:
