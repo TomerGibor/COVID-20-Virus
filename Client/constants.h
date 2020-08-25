@@ -28,7 +28,7 @@
 #define BAD_REQUEST_STATUS_CODE "400"
 
 #define PORT "80" // HTTP port
-#define HOST "covid-20-virus.herokuapp.com"
+#define HOST "covid-20-virus.herokuapp.com" // enter your server url here
 #define GET "GET /"
 #define HTTP " HTTP/1.1\r\n"
 #define CRLF "\r\n"
