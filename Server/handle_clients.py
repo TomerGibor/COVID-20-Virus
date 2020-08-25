@@ -1,9 +1,10 @@
 from typing import List, Dict
 
-from fastapi import Request
+from fastapi import Request, HTTPException, status
+from PIL import Image
 
 from driveapi import upload_file_from_existing_file, create_folder
-from consts import HTTPHeaders, DBIdentifiers
+from consts import HTTPHeaders, DBIdentifiers, MIMETypesExtensions
 from db_utils import DBHandler
 
 NO_COMMANDS = ['no_commands']
@@ -47,7 +48,7 @@ def handle_command_request(request: Request) -> Dict[str, List[str]]:
 
 
 async def upload_file(request: Request, filename: str, db_identifier: DBIdentifiers,
-                      file_type: str, remove_nulls: bool = False) -> None:
+                      remove_nulls: bool = False) -> None:
     """
     Uploads the file content of the request to the (already created)
       Google Drive folder.
@@ -57,19 +58,25 @@ async def upload_file(request: Request, filename: str, db_identifier: DBIdentifi
         db_identifier (DBIdentifiers): The identifier in the DB which
           counts how many files of that name have been uploaded, so that
           the new file will be numbered.
-        file_type (str): The file ending. NOT the MIME type.
         remove_nulls (bool): If set to True, removes all the null
          characters in the file. Defaults to False.
+    Raises:
+        HTTPException(415 Unsupported Media Type) - In case where the
+         received MIME type is unsupported.
     """
-    if db_identifier not in DBIdentifiers.__members__.values():
+    if not MIMETypesExtensions.has_value(request.headers[HTTPHeaders.CONTENT_TYPE]):
+        raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+    if not DBIdentifiers.has_value(db_identifier):
         return  # illegal identifier
+
     mac = request.headers[HTTPHeaders.MAC]
-    await _write_to_temp_file(request, remove_nulls)
-    title = _build_title(mac, filename, file_type, db_identifier)
+    mime_type = await _write_to_temp_file(request, remove_nulls)
+    title = _build_title(mac, filename, MIMETypesExtensions(mime_type).file_extension,
+                         db_identifier)
     _increase_identifier(mac, db_identifier)
     upload_file_from_existing_file(title=title,
                                    src_filename=TEMP_FILE,
-                                   mime_type=request.headers[HTTPHeaders.CONTENT_TYPE],
+                                   mime_type=mime_type,
                                    parent_folder_title=mac)
 
 
@@ -95,16 +102,26 @@ def _create_new_client(mac: str, datetime: str) -> None:
     create_folder(mac)  # Create new Google Drive folder for the new client
 
 
-async def _write_to_temp_file(request: Request, remove_nulls: bool) -> None:
+async def _write_to_temp_file(request: Request, remove_nulls: bool) -> str:
     data = await request.body()
     if remove_nulls:
         data = data.replace(b'\x00', b'')
     with open(TEMP_FILE, 'wb') as f:
         f.write(data)
+    if MIMETypesExtensions(cnt_type := request.headers[HTTPHeaders.CONTENT_TYPE]) \
+            is MIMETypesExtensions.BMP:
+        # reduce file size (by about 10-50 fold) by converting from bitmap to png
+        _convert_temp_from_bmp_to_png()
+        mime_type = MIMETypesExtensions.PNG.value
+    else:
+        mime_type = MIMETypesExtensions(cnt_type).value
+
+    return mime_type
 
 
-def _build_title(mac: str, filename: str, file_type: str, db_identifier: DBIdentifiers) -> str:
-    return f'{filename}{getattr(db_handler.db[mac], db_identifier)}.{file_type}'
+def _build_title(mac: str, filename: str, file_extension: str,
+                 db_identifier: DBIdentifiers) -> str:
+    return f'{filename}{getattr(db_handler.db[mac], db_identifier)}.{file_extension}'
 
 
 def _increase_identifier(mac: str, db_identifier: DBIdentifiers) -> None:
@@ -113,3 +130,5 @@ def _increase_identifier(mac: str, db_identifier: DBIdentifiers) -> None:
     db_handler.update_db()
 
 
+def _convert_temp_from_bmp_to_png():
+    Image.open(TEMP_FILE).save(TEMP_FILE, 'PNG')

